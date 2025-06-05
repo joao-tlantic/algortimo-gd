@@ -8,11 +8,6 @@ import logging
 import pandas as pd
 import numpy as np
 import os
-import rpy2.robjects as ro
-from rpy2.robjects import pandas2ri
-from rpy2.robjects.conversion import localconverter
-from rpy2.robjects.packages import importr
-from rpy2.rinterface_lib.embedded import RRuntimeError
 from typing import Dict, List, Any, Optional, Union, Tuple
 from datetime import datetime, timedelta
 from isoweek import Week
@@ -27,7 +22,9 @@ from src.helpers import (
     count_dates_per_year, load_wfm_scheds, func_turnos, adjusted_isoweek,
     custom_round, calcular_folgas2, calcular_folgas3
 )
+from src.load_csv_functions.load_valid_emp import valid_emp
 from base_data_project.data_manager.managers.base import BaseDataManager
+from base_data_project.data_manager.managers.managers import CSVDataManager, DBDataManager
 from base_data_project.storage.models import BaseDataModel
 from base_data_project.storage.containers import BaseDataContainer
 from base_data_project.log_config import get_logger
@@ -42,10 +39,10 @@ class DescansosDataModel(BaseDataModel):
     - Tracking data lineage and operations
     """
     
-    def __init__(self, data_container: BaseDataContainer = None, project_name: str = 'R_allocation_project', external_data: Dict[str, Any] = CONFIG.get('defaults_external_data', {})):
+    def __init__(self, data_container: BaseDataContainer = None, project_name: str = PROJECT_NAME, external_data: Dict[str, Any] = CONFIG.get('defaults_external_data', {})):
         """Initialize an empty data container."""
         # get the logic already implemented in base class
-        super().__init__(data_container, PROJECT_NAME)
+        super().__init__(data_container=data_container, project_name=PROJECT_NAME)
 
         self.logger = get_logger(PROJECT_NAME)
 
@@ -129,10 +126,15 @@ class DescansosDataModel(BaseDataModel):
                 self.logger.warning("No entities passed as argument")
                 return False
             
-            # valid emp info
-            query_path = entities_dict['valid_emp']
-            process_id_str = "'" + str(self.external_call_data['current_process_id']) + "'"
-            valid_emp = data_manager.load_data('valid_emp', query_file=query_path, process_id=process_id_str)
+            if isinstance(data_manager, CSVDataManager):
+                valid_emp = valid_emp()
+            elif isinstance(data_manager, DBDataManager):
+                # valid emp info
+                query_path = entities_dict['valid_emp']
+                process_id_str = "'" + str(self.external_call_data['current_process_id']) + "'"
+                valid_emp = data_manager.load_data('valid_emp', query_file=query_path, process_id=process_id_str)
+            else:
+                self.logger.error(f"No instance found for data_manager: {data_manager.__name__}")
 
             self.logger.info(f"valid_emp: {valid_emp.columns}")
 
@@ -182,7 +184,7 @@ class DescansosDataModel(BaseDataModel):
             return True
             
         except Exception as e:
-            self.logger.error(f"Error loading data from data manager: {str(e)}")
+            self.logger.error(f"Error loading process data: {str(e)}")
 
             return False
 

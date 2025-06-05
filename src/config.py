@@ -15,19 +15,11 @@ from src.helpers import get_oracle_url_cx
 # Get application root directory
 ROOT_DIR = Path(__file__).resolve().parents[1]
 
-# Try to detect R_HOME if not set
-if 'R_HOME' not in os.environ:
-    try:
-        r_home = subprocess.check_output(['R', 'RHOME'], text=True).strip()
-        os.environ['R_HOME'] = r_home
-    except:
-        pass  # Silently fail, will be caught later when R is actually used
-
 # Add R configuration to CONFIG dictionary
 
 CONFIG = {
     # Database configuration
-    'use_db': True,
+    'use_db': False,
     'db_url': get_oracle_url_cx(),
     #'db_url': f"sqlite:///{os.path.join(ROOT_DIR, 'data', 'production.db')}",
     
@@ -40,19 +32,21 @@ CONFIG = {
     'dummy_data_filepaths': {
         # Example data files mapping - replace with your actual data files
         'valid_emp': os.path.join(ROOT_DIR, 'data', 'csvs', 'valid_emp.csv'),
-        'df_ausencias_ferias': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
-        'df_ciclos_90': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
-        'df_colaborador': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
-        'df_estimativas': os.path.join(ROOT_DIR, 'data', 'csvs', ''), # TODO: remove since it doesnt come from a query
-        'df_estrutura_wfm': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
-        'df_faixa_horario': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
-        'df_feriados': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
-        'df_festivos':  os.path.join(ROOT_DIR, 'data', 'csvs', ''),
+        'df_ausencias_ferias': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_ausencias_ferias.csv'),
+        'df_ciclos_90': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_ciclos_90.csv'),
+        'df_colaborador': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_colaborador.csv'),
+        'df_estimativas': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_estimativas.csv'), # TODO: remove since it doesnt come from a query
+        'df_estrutura_wfm': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_estrutura_wfm.csv'),
+        'df_faixa_horario': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_faixa_horario.csv'),
+        'df_feriados': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_feriados.csv'),
+        'df_festivos':  os.path.join(ROOT_DIR, 'data', 'csvs', 'df_festivos.csv'),
         'df_messages': os.path.join(ROOT_DIR, 'data', 'csvs', 'messages_df.csv'),
-        'df_orcamento': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
-        'df_pre_gerados': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
-        'params_algo': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
-        'params_lq': os.path.join(ROOT_DIR, 'data', 'csvs', ''),
+        'df_orcamento': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_orcamento.csv'),
+        'df_pre_gerados': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_pre_gerados.csv'),
+        'params_algo': os.path.join(ROOT_DIR, 'data', 'csvs', 'params_algo.csv'),
+        'params_lq': os.path.join(ROOT_DIR, 'data', 'csvs', 'params_lq.csv'),
+        'df_calendario_passado': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_calendario_passado.csv'),
+        'df_granularidade': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_granularidade.csv'),
     },
 
     'external_call_data': {
@@ -97,17 +91,6 @@ CONFIG = {
         'example_algorithm'
         # Add your custom algorithms here
     ],
-
-    # R package names
-    'packnames': [
-        'ggplot2',
-        # Add other R packages here
-    ],
-
-    'R': {
-        'home': os.environ.get('R_HOME', ''),
-        'script_dir': os.path.join('src', 'r_scripts')  # Directory for R scripts        
-    },
      
     # Process configuration - stages and decision points
     'stages': {
