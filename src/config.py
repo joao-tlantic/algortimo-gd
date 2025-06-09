@@ -19,7 +19,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 
 CONFIG = {
     # Database configuration
-    'use_db': False,
+    'use_db': True,
     'db_url': get_oracle_url_cx(),
     #'db_url': f"sqlite:///{os.path.join(ROOT_DIR, 'data', 'production.db')}",
     
@@ -35,7 +35,6 @@ CONFIG = {
         'df_ausencias_ferias': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_ausencias_ferias.csv'),
         'df_ciclos_90': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_ciclos_90.csv'),
         'df_colaborador': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_colaborador.csv'),
-        'df_estimativas': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_estimativas.csv'), # TODO: remove since it doesnt come from a query
         'df_estrutura_wfm': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_estrutura_wfm.csv'),
         'df_faixa_horario': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_faixa_horario.csv'),
         'df_feriados': os.path.join(ROOT_DIR, 'data', 'csvs', 'df_feriados.csv'),

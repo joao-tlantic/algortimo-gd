@@ -639,7 +639,7 @@ class AlgoritmoGDService(BaseService):
                     result_data={
                         'func_inicializa_success': success,
                         'validation_result': validation_result,
-                        'data': self.data.transformed_data
+                        'data': self.data.medium_data
                     }
                 )
             return True
@@ -671,41 +671,36 @@ class AlgoritmoGDService(BaseService):
                     message=msg,
                 )
 
-            algorithm = AlgorithmFactory.create_algorithm(
-                decision=algorithm_name,
-                parameters=algorithm_params
+            valid_algorithm_run = self.data.allocation_cycle(
+                algorithm_name=algorithm_name, 
+                algorithm_params=algorithm_params,
             )
-
-            # Can return result data or boolean to validate execution
-            results = algorithm.run(data=self.data.medium_data)
-
-            if results.get('status') == 'completed':
-                valid_store = self.data.store_algorithm_data(result_data=results)
-            else: 
-                self.logger.error(f"Algorithm failed: {results.get('error')}")
+            if not valid_algorithm_run:
                 if self.stage_handler:
                     self.stage_handler.complete_substage(
                         stage_name=stage_name,
                         substage_name=substage_name,
                         success=False,
                         result_data={
-                            'algo_results': results
+                            'valid_algorithm_run': valid_algorithm_run
                         }
                     )
                 return False
             
-            if not valid_store:
-                self.logger.error(f"Algorithm results failed to store: {results.get('error')}")
+            valid_algorithm_results = self.data.validate_allocation_cycle()
+            if not valid_algorithm_results:
                 if self.stage_handler:
                     self.stage_handler.complete_substage(
-                    stage_name=stage_name,
-                    substage_name=substage_name,
-                    success=False,
-                    result_data={
-                        'algo_results': results,
-                        'storage_results': valid_store
-                    }
-                )
+                        stage_name=stage_name,
+                        substage_name=substage_name,
+                        success=False,
+                        result_data={
+                            'valid_algorithm_run': valid_algorithm_run,
+                            'valid_algorithm_results': valid_algorithm_results
+                        }
+                    )
+                return False
+
                     
             if self.stage_handler:
                 self.stage_handler.complete_substage(
@@ -713,8 +708,8 @@ class AlgoritmoGDService(BaseService):
                     substage_name=substage_name,
                     success=True,
                     result_data={
-                        'algo_results': results,
-                        'storage_results': valid_store                        
+                        'valid_algorithm_run': valid_algorithm_run,
+                        'valid_algorithm_results': valid_algorithm_results                        
                     }
                 )
 
