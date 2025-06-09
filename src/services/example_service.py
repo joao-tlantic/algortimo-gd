@@ -90,7 +90,7 @@ class AlgoritmoGDService(BaseService):
         if stage_name == "data_loading":
             return self._load_process_data()
         elif stage_name == "processing":
-            return self._execute_processing_stage()
+            return self._execute_processing_stage(algorithm_name=algorithm_name, algorithm_params=algorithm_params)
         else:
             self.logger.error(f"Unknown stage name: {stage_name}")
             return False
@@ -228,6 +228,8 @@ class AlgoritmoGDService(BaseService):
             if self.stage_handler and self.process_manager:
                 stage_sequence = self.stage_handler.stages[stage_name]['sequence']
                 insert_results = self.process_manager.current_decisions.get(stage_sequence, {}).get('insertions', {}).get('insert_results', False)
+                algorithm_name = self.process_manager.current_decisions.get(stage_sequence, {}).get('algorithm', {}).get('name', algorithm_name)
+                algorithm_params = self.process_manager.current_decisions.get(stage_sequence, {}).get('algorithm', {}).get('parameters', algorithm_params)
             posto_id_list = self.data.auxiliary_data.get('posto_id_list', [])
             for posto_id in posto_id_list:
                 progress = 0.0
@@ -298,7 +300,7 @@ class AlgoritmoGDService(BaseService):
                 # SUBSTAGE 4: allocation_cycle
                 if self.stage_handler:
                     self.stage_handler.start_substage('processing', 'allocation_cycle')
-                valid_allocation_cycle = self._execute_allocation_cycle_substage(stage_name)
+                valid_allocation_cycle = self._execute_allocation_cycle_substage(stage_name, algorithm_name=algorithm_name, algorithm_params=algorithm_params)
                 if not valid_allocation_cycle:
                     if self.stage_handler:
                         self.stage_handler.track_progress(

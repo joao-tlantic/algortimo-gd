@@ -30,13 +30,13 @@ class AlgorithmFactory:
                 'available_algos': CONFIG.get('available_algorithms')
             }
 
-        if decision.lower() not in parameters.get('available_algos'):
+        if decision.lower() not in parameters.get('available_algorithms'):
             # If decision not available, raise an exception
             msg = f"Decision made for algorithm selection not available in config file config.py. Please configure the file."
             logger.error(msg)
             raise ValueError(msg)
 
-        if decision.lower() == 'LpAlgo':
+        if decision.lower() == 'solverOne':
             logger.info()
             return SolverOne(algo_name=decision.lower(), parameters=parameters) # TODO: define the algorithms here
         elif decision.lower() == 'FillBagsAlgorithm':

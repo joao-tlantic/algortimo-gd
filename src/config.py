@@ -118,19 +118,23 @@ CONFIG = {
             'requires_previous': True,   # Requires previous stage completion
             'validation_required': True,
             ### NOT NEEDED SINCE NO DECISIONS FOR THIS PROJECT
-            #'decisions': {
-            #    'transformations': {     # Decision point for transformation options
-            #        'apply_filtering': False,
-            #        'filter_column': '',
-            #        'filter_value': '',
-            #        'normalize_numeric': True,  # Whether to normalize numerical data
-            #        'fill_missing': True,       # Whether to fill missing values
-            #        'fill_method': 'mean'       # Method for filling missing values
-            #    },
-            #    'insertions': {
-            #        'insert_results': False
-            #    }
-            #},
+            'decisions': {
+                'transformations': {     # Decision point for transformation options
+                    'apply_filtering': False,
+                    'filter_column': '',
+                    'filter_value': '',
+                    'normalize_numeric': True,  # Whether to normalize numerical data
+                    'fill_missing': True,       # Whether to fill missing values
+                    'fill_method': 'mean'       # Method for filling missing values
+                },
+                'algorithm': {
+                    'name': 'solverOne',  # Default algorithm to use
+                    'parameters': {}
+                },
+                'insertions': {
+                    'insert_results': False
+                }
+            },
             'substages': {
                 'connection': {
                     'sequence': 1,
