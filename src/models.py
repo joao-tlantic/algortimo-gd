@@ -23,7 +23,7 @@ from src.helpers import (
     custom_round, calcular_folgas2, calcular_folgas3
 )
 from src.load_csv_functions.load_valid_emp import load_valid_emp_csv
-from base_data_project.algorithms.factory import AlgorithmFactory
+from src.algorithms.factory import AlgorithmFactory
 from base_data_project.data_manager.managers.base import BaseDataManager
 from base_data_project.data_manager.managers.managers import CSVDataManager, DBDataManager
 from base_data_project.storage.models import BaseDataModel

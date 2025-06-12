@@ -10,7 +10,7 @@ from datetime import datetime
 import pandas as pd
 
 # Import base_data_project components
-from base_data_project.algorithms.factory import AlgorithmFactory
+from src.algorithms.factory import AlgorithmFactory
 from base_data_project.data_manager.managers.base import BaseDataManager
 from base_data_project.process_management.manager import ProcessManager
 from base_data_project.process_management.stage_handler import ProcessStageHandler
@@ -80,8 +80,39 @@ class AlgoritmoGDService(BaseService):
         # Process tracking
         self.stage_handler = ProcessStageHandler(process_manager=process_manager, config=config) if process_manager else None
         self.algorithm_results = {}
+
+        self._register_decision_points()
         
         self.logger.info("AlgoritmoGDService initialized")
+
+    def _register_decision_points(self):
+        """Register decision points from config with the process manager"""
+        if not self.process_manager:
+            return
+            
+        stages_config = CONFIG.get('stages', {})
+        
+        for stage_name, stage_config in stages_config.items():
+            sequence = stage_config.get('sequence')
+            decisions = stage_config.get('decisions', {})
+            
+            if decisions and sequence is not None:
+                self.logger.info(f"Registering stage {stage_name} with full decisions: {decisions}")
+                # Flatten all decision groups into one dict of defaults
+                defaults = {}
+                for decision_group in decisions.values():
+                    if isinstance(decision_group, dict):
+                        defaults.update(decision_group)
+                
+                # Register with process manager
+                self.process_manager.register_decision_point(
+                    stage=sequence,
+                    schema=dict,  # Keep it simple with dict schema
+                    required=True,
+                    defaults=defaults
+                )
+                
+                self.logger.info(f"Registered decisions for stage {stage_name} (seq: {sequence})")
 
     def _dispatch_stage(self, stage_name, algorithm_name = None, algorithm_params = None):
         """Dispatch to appropriate stage method."""
@@ -228,8 +259,18 @@ class AlgoritmoGDService(BaseService):
             if self.stage_handler and self.process_manager:
                 stage_sequence = self.stage_handler.stages[stage_name]['sequence']
                 insert_results = self.process_manager.current_decisions.get(stage_sequence, {}).get('insertions', {}).get('insert_results', False)
-                algorithm_name = self.process_manager.current_decisions.get(stage_sequence, {}).get('algorithm', {}).get('name', algorithm_name)
-                algorithm_params = self.process_manager.current_decisions.get(stage_sequence, {}).get('algorithm', {}).get('parameters', algorithm_params)
+                #algorithm_name = self.process_manager.current_decisions.get(stage_sequence, {}).get('algorithm', {}).get('name', algorithm_name)
+                #algorithm_params = self.process_manager.current_decisions.get(stage_sequence, {}).get('algorithm', {}).get('parameters', algorithm_params)
+                self.logger.info(f"Looking for defaults with stage_sequence: {stage_sequence}, type: {type(stage_sequence)}")
+                stage_config = CONFIG.get('stages', {}).get('processing', {})
+                decisions = stage_config.get('decisions', {})
+
+                algorithm_name = decisions.get('algorithm', {}).get('name', algorithm_name)
+                algorithm_params = decisions.get('algorithm', {}).get('parameters', algorithm_params)
+                insert_results = decisions.get('insertions', {}).get('insert_results', False)
+                #self.logger.info(f"Found defaults: {defaults}")
+                self.logger.info(f"Retrieving these values from config algorithm_name: {algorithm_name}, algorithm_params: {algorithm_params}, insert_results: {insert_results}")
+
             posto_id_list = self.data.auxiliary_data.get('posto_id_list', [])
             for posto_id in posto_id_list:
                 progress = 0.0
@@ -300,7 +341,7 @@ class AlgoritmoGDService(BaseService):
                 # SUBSTAGE 4: allocation_cycle
                 if self.stage_handler:
                     self.stage_handler.start_substage('processing', 'allocation_cycle')
-                valid_allocation_cycle = self._execute_allocation_cycle_substage(stage_name, algorithm_name=algorithm_name, algorithm_params=algorithm_params)
+                valid_allocation_cycle = self._execute_allocation_cycle_substage(stage_name=stage_name, algorithm_name=algorithm_name, algorithm_params=algorithm_params)
                 if not valid_allocation_cycle:
                     if self.stage_handler:
                         self.stage_handler.track_progress(
@@ -657,7 +698,7 @@ class AlgoritmoGDService(BaseService):
                 )
             return False
 
-    def _execute_allocation_cycle_substage(self, algorithm_params: Dict[str, Any], stage_name: str = 'processing', algorithm_name: List[str] = ['example_algorithm']) -> bool:
+    def _execute_allocation_cycle_substage(self, algorithm_params: Dict[str, Any], stage_name: str = 'processing', algorithm_name: str = ['example_algorithm']) -> bool:
         """
         Execute the processing substage of allocation_cycle. This could be implemented as a method or directly on the _execute_processing_stage() method.
         """
@@ -733,13 +774,14 @@ class AlgoritmoGDService(BaseService):
         Execute the processing substage of format_results for insertion. This could be implemented as a method or directly on the _execute_processing_stage() method.
         """
         try:
-            self.logger.info()
+            self.logger.info(f"Starting format_results substage for stage: {stage_name}")
+            stage_name = 'format_results'
             success = self.data.format_results()
             if not success:
                 self.logger.warning("Performing allocation_cycle unsuccessful, returning False")
                 if self.stage_handler:
                     self.stage_handler.complete_substage(
-                        stage_name='processing',
+                        stage_name=stage_name,
                         substage_name='format_results',
                         success=False
                     )

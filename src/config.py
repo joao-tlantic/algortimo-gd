@@ -86,7 +86,7 @@ CONFIG = {
 
     # Available algorithms for the project
     'available_algorithms': [
-        'solverOne',
+        'solver_one',
         'example_algorithm'
         # Add your custom algorithms here
     ],
@@ -128,7 +128,7 @@ CONFIG = {
                     'fill_method': 'mean'       # Method for filling missing values
                 },
                 'algorithm': {
-                    'name': 'solverOne',  # Default algorithm to use
+                    'name': 'solver_one',  # Default algorithm to use
                     'parameters': {}
                 },
                 'insertions': {
@@ -160,7 +160,7 @@ CONFIG = {
                     'required': True,
                     'decisions': {
                         # Very important define the algorithms here
-                        'algorithms': ['solverOne']
+                        'algorithms': ['solver_one']
                     }                     
                 },
                 'format_results': {
