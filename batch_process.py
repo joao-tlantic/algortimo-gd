@@ -157,7 +157,7 @@ def batch_process(use_db, no_tracking, algorithm):
         # Create spinner for initialization
         with click.progressbar(length=100, label="Initializing") as bar:
             # Create and configure components
-            data_manager, process_manager = create_components(use_db, no_tracking, CONFIG)
+            data_manager, process_manager = create_components(use_db, no_tracking, CONFIG, project_name=PROJECT_NAME)
             bar.update(100)
         
         click.echo()

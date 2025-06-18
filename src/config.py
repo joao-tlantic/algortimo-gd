@@ -27,6 +27,15 @@ CONFIG = {
     'data_dir': os.path.join(ROOT_DIR, 'data'),
     'output_dir': os.path.join(ROOT_DIR, 'data', 'output'),
     'log_dir': os.path.join(ROOT_DIR, 'logs'),
+
+    'storage_strategy': {
+        'mode': 'memory',  # Options: 'memory', 'persist', 'hybrid'
+        'persist_intermediate_results': False,
+        'stages_to_persist': [],  # Empty list means all stages
+        'cleanup_policy': 'keep_latest',  # Options: 'keep_all', 'keep_latest', 'keep_none'
+        'persist_format': '',  # Options: 'csv', 'db'
+        'storage_dir': 'data/intermediate'  # For CSV storage 
+    }, # TODO: ensure data/intermediate is created if it doesnt exist
     
     # File paths for CSV data sources
     'dummy_data_filepaths': {
@@ -49,9 +58,9 @@ CONFIG = {
     },
 
     'external_call_data': {
-        'current_process_id': 249652,
+        'current_process_id': 249730,
         'api_proc_id': 999,
-        'wfm_proc_id': 249652,
+        'wfm_proc_id': 249730,
         'wfm_user': 'WFM',
         'start_date': '2025-01-01',
         'end_date': '2025-12-31',
