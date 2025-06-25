@@ -758,14 +758,14 @@ class DescansosDataModel(BaseDataModel):
             df_turnos_final.loc[mask_overnight, 'h_out_1'] += timedelta(days=1)
             
             # Update fech and aber based on turno
-            df_turnos_final.loc[df_turnos_final['turno'] == 'm', 'fech'] = df_turnos_final.loc[df_turnos_final['turno'] == 'm', 'h_out_1']
-            df_turnos_final.loc[df_turnos_final['turno'] == 't', 'aber'] = df_turnos_final.loc[df_turnos_final['turno'] == 't', 'h_ini_1']
+            df_turnos_final.loc[df_turnos_final['turno'] == 'M', 'fech'] = df_turnos_final.loc[df_turnos_final['turno'] == 'M', 'h_out_1']
+            df_turnos_final.loc[df_turnos_final['turno'] == 'T', 'aber'] = df_turnos_final.loc[df_turnos_final['turno'] == 'T', 'h_ini_1']
             
             # Adjust times based on aber/fech constraints
-            mask_m = df_turnos_final['turno'] == 'm'
+            mask_m = df_turnos_final['turno'] == 'M'
             df_turnos_final.loc[mask_m, 'h_ini_1'] = df_turnos_final.loc[mask_m, ['h_ini_1', 'aber']].min(axis=1)
             
-            mask_t = df_turnos_final['turno'] == 't'
+            mask_t = df_turnos_final['turno'] == 'T'
             df_turnos_final.loc[mask_t, 'h_out_1'] = df_turnos_final.loc[mask_t, ['h_out_1', 'fech']].max(axis=1)
             
             # Process granularity data (df_orcamento equivalent)
@@ -805,17 +805,17 @@ class DescansosDataModel(BaseDataModel):
                         'fk_tipo_posto': fk_tipo_posto,
                         'h_ini_1': min_time,
                         'h_out_1': middle_time,
-                        'turno': 'm',
+                        'turno': 'M',
                         'data': None,
-                        'fk_posto_turno': f'{fk_tipo_posto}_m'
+                        'fk_posto_turno': f'{fk_tipo_posto}_M'
                     },
                     {
                         'fk_tipo_posto': fk_tipo_posto,
                         'h_ini_1': middle_time,
                         'h_out_1': max_time,
-                        'turno': 't', 
+                        'turno': 'T', 
                         'data': None,
-                        'fk_posto_turno': f'{fk_tipo_posto}_t'
+                        'fk_posto_turno': f'{fk_tipo_posto}_T'
                     }
                 ]
                 df_turnos_processing = pd.DataFrame(new_rows)
@@ -1374,6 +1374,13 @@ class DescansosDataModel(BaseDataModel):
             matriz2_og = self.raw_data['df_calendario'].copy()
             matrizB_og = self.raw_data['df_estimativas'].copy() 
             matrizA_og = self.raw_data['df_colaborador'].copy()
+
+            # Debug: Check matrizB_og (df_estimativas)
+            self.logger.info("=== Debug matrizB_og (df_estimativas) ===")
+            self.logger.info(f"Shape: {matrizB_og.shape}")
+            self.logger.info(f"Columns: {matrizB_og.columns.tolist()}")
+            self.logger.info(f"First few rows:\n{matrizB_og.head()}")
+            self.logger.info("=====================================")
 
             # TODO: Remove this debug code
             # Debug: Check the structure of matriz2_og
@@ -2240,18 +2247,32 @@ class DescansosDataModel(BaseDataModel):
             
             # Merge +H with matrizB for morning
             matrizB_m = matrizB_ini[matrizB_ini['turno'] == 'M'].copy()
+            
+            # Convert dates to date objects
+            matrizB_m['data'] = pd.to_datetime(matrizB_m['data']).dt.date
+            trab_manha['DATA'] = pd.to_datetime(trab_manha['DATA']).dt.date
+            
+            self.logger.info(f"matrizB_m: {matrizB_m}")
+            self.logger.info(f"trab_manha: {trab_manha}")
             matrizB_m = matrizB_m.merge(trab_manha, left_on=['data', 'turno'], 
                                     right_on=['DATA', 'TURNO'], how='left')
             matrizB_m = matrizB_m.drop(['DATA', 'TURNO'], axis=1, errors='ignore')
             
             # Merge +H with matrizB for afternoon  
             matrizB_t = matrizB_ini[matrizB_ini['turno'] == 'T'].copy()
+            
+            # Convert dates for afternoon merge to date objects
+            matrizB_t['data'] = pd.to_datetime(matrizB_t['data']).dt.date
+            trab_tarde['DATA'] = pd.to_datetime(trab_tarde['DATA']).dt.date
+            
             matrizB_t = matrizB_t.merge(trab_tarde, left_on=['data', 'turno'],
                                     right_on=['DATA', 'TURNO'], how='left')
             matrizB_t = matrizB_t.drop(['DATA', 'TURNO'], axis=1, errors='ignore')
+            self.logger.info(f"matrizB_t: {matrizB_t}")
             
             # Combine morning and afternoon
             matrizB_ini = pd.concat([matrizB_m, matrizB_t], ignore_index=True)
+            self.logger.info(f"matrizB_ini: {matrizB_ini}")
             
             # Get param_pess_obj from external data or set default
             param_pess_obj = self.external_call_data.get('param_pessoas_objetivo', 0.5)
