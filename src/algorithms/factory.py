@@ -8,7 +8,7 @@ from base_data_project.log_config import get_logger
 from base_data_project.storage.models import BaseDataModel
 
 # Local stuff
-from src.algorithms.soverOne import SolverOne
+from src.algorithms.alcampoAlgorithm import AlcampoAlgorithm
 from src.algorithms.example_algorithm import ExampleAlgorithm
 from src.config import PROJECT_NAME, CONFIG
 
@@ -35,9 +35,9 @@ class AlgorithmFactory:
             logger.error(msg)
             raise ValueError(msg)
 
-        if decision.lower() == 'solver_one':
+        if decision.lower() == 'alcampoAlgorithm':
             logger.info(f"Creating {decision.lower()} algorithm with parameters: {parameters}")
-            return SolverOne(algo_name=decision.lower(), parameters=parameters) # TODO: define the algorithms here
+            return AlcampoAlgorithm(algo_name=decision.lower(), parameters=parameters) # TODO: define the algorithms here
         elif decision.lower() == 'FillBagsAlgorithm':
             logger.info(f"Creating {decision.lower()} algorithm with parameters: {parameters}")
             return ExampleAlgorithm(algo_name=decision.lower(), parameters=parameters)

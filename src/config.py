@@ -137,7 +137,7 @@ CONFIG = {
                     'fill_method': 'mean'       # Method for filling missing values
                 },
                 'algorithm': {
-                    'name': 'solver_one',  # Default algorithm to use
+                    'name': 'alcampoAlgorithm',  # Default algorithm to use
                     'parameters': {}
                 },
                 'insertions': {
