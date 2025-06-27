@@ -154,7 +154,7 @@ def insert_holidays_absences(employees_tot: List[str], ausencias_total: pd.DataF
                 temp = str(absence_row['data_ini'])
                 data = temp[:10]  # Extract date
                 val = absence_row['tipo_ausencia']
-                fk_motivo_ausencia = absence_row['fk_motivo_ausencia']
+                fk_motivo_ausencia = int(absence_row['fk_motivo_ausencia']) 
                 
                 # Find column indices for this date
                 col_indices = []
@@ -162,7 +162,9 @@ def insert_holidays_absences(employees_tot: List[str], ausencias_total: pd.DataF
                     if data in col_data.values:
                         col_indices.append(col_idx)
                 
+                #logger.info(f"DEBUG: col_indices: {col_indices}")
                 if len(col_indices) >= 2:
+                    #logger.info(f"DEBUG: fk_motivo_ausencia: {fk_motivo_ausencia}, type: {type(fk_motivo_ausencia)}")
                     if fk_motivo_ausencia == 1:
                         # Vacation
                         reshaped_final_3.iloc[row_index, col_indices[0]] = "V"
@@ -247,10 +249,14 @@ def create_mt_mtt_cycles(df_alg_variables_filtered: pd.DataFrame, reshaped_final
             else:
                 eachrep = 14
             
+            #logger.info(f"DEBUG: eachrep: {eachrep}")
+            #logger.info(f"DEBUG: seq_turno: {seq_turno}")
+            #logger.info(f"DEBUG: semana1: {semana1}")
+
             # Generate shift patterns based on seq_turno and semana1
             if seq_turno == "MT" and semana1 in ["T", "T1"]:
                 new_row = ['T'] * eachrep
-                new_row2 = (['T'] * 14 + ['M'] * 14) * ((reshaped_final_3.shape[1] // 2 // 14) + 1)
+                new_row2 = (['M'] * 14 + ['T'] * 14) * ((reshaped_final_3.shape[1] // 2 // 14) + 1)
                 new_row = [emp] + new_row + new_row2
                 
             elif seq_turno == "MT" and semana1 in ["M", "M1"]:
@@ -292,6 +298,9 @@ def create_mt_mtt_cycles(df_alg_variables_filtered: pd.DataFrame, reshaped_final
                 # Default case
                 new_row = [seq_turno] * reshaped_final_3.shape[1]
                 new_row = [emp] + new_row[1:]
+
+            #logger.info(f"DEBUG: new_row: {new_row}")
+
             
             # Trim to match matrix width
             elements_to_drop = len(new_row) - reshaped_final_3.shape[1]
@@ -303,6 +312,8 @@ def create_mt_mtt_cycles(df_alg_variables_filtered: pd.DataFrame, reshaped_final
             # Add row to matrix
             new_row_df = pd.DataFrame([new_row], columns=reshaped_final_3.columns)
             reshaped_final_3 = pd.concat([reshaped_final_3, new_row_df], ignore_index=True)
+            #logger.info(f"DEBUG: new_row after concat: {new_row}")
+            #logger.info(f"DEBUG: elements_to_drop after concat: {elements_to_drop}")
         
         # Reset column and row names
         reshaped_final_3.columns = range(reshaped_final_3.shape[1])
@@ -488,6 +499,20 @@ def add_trads_code(df_cycle90_info_filtered: pd.DataFrame, lim_sup_manha: str, l
             df_cycle90_info_filtered[['hora_ini_1', 'hora_fim_1', 'hora_ini_2', 'hora_fim_2']].max(axis=1) - 
             pd.Timedelta(minutes=15)
         )
+
+        # Calculate intervalo column
+        #df_cycle90_info_filtered['intervalo'] = df_cycle90_info_filtered.apply(
+        #    lambda row: 0 if pd.isna(row['hora_ini_2']) else 
+        #    (pd.to_datetime(row['hora_ini_2']) - pd.to_datetime(row['hora_fim_1'])).total_seconds() / 3600,
+        #    axis=1
+        #)
+#
+        # Calculate max_exit column
+        #time_columns = ['hora_ini_1', 'hora_fim_1', 'hora_ini_2', 'hora_fim_2']
+        #df_cycle90_info_filtered['max_exit'] = df_cycle90_info_filtered[time_columns].apply(
+        #    lambda row: pd.to_datetime(row.dropna()).max() - pd.Timedelta(minutes=15),
+        #    axis=1
+        #)
         
         # Apply TRADS code logic
         def get_trads_code(row):
@@ -535,7 +560,7 @@ def add_trads_code(df_cycle90_info_filtered: pd.DataFrame, lim_sup_manha: str, l
 
 def assign_90_cycles(reshaped_final_3: pd.DataFrame, df_cycle90_info_filtered: pd.DataFrame,
                     colab: int, matriz_festivos: pd.DataFrame, lim_sup_manha: str, lim_inf_tarde: str,
-                    day: str, reshaped_col_index: int, reshaped_row_index: int, matricula: str) -> pd.DataFrame:
+                    day: str, reshaped_col_index: list, reshaped_row_index: list, matricula: str) -> pd.DataFrame:
     """
     Convert R assign_90_cycles function to Python.
     Assign 90-day cycles to the schedule matrix.
@@ -561,36 +586,48 @@ def assign_90_cycles(reshaped_final_3: pd.DataFrame, df_cycle90_info_filtered: p
         lim_sup_manha = pd.to_datetime(lim_sup_manha, format="%Y-%m-%d %H:%M")
         lim_inf_tarde = f"2000-01-01 {lim_inf_tarde}"
         lim_inf_tarde = pd.to_datetime(lim_inf_tarde, format="%Y-%m-%d %H:%M")
+        #logger.info(f"DEBUG: lim_sup_manha: {lim_sup_manha}")
+        #logger.info(f"DEBUG: lim_inf_tarde: {lim_inf_tarde}")
         
         # Add TRADS codes
         df_cycle90_info_filtered = add_trads_code(df_cycle90_info_filtered, 
                                                  lim_sup_manha.strftime("%Y-%m-%d %H:%M:%S"), 
                                                  lim_inf_tarde.strftime("%Y-%m-%d %H:%M:%S"))
         
+        #logger.info(f"DEBUG: df_cycle90_info_filtered: {df_cycle90_info_filtered}")
+
         # Reset row names
         reshaped_final_3.reset_index(drop=True, inplace=True)
         
         # Get holidays as list of strings
-        festivos = [str(date) for date in matriz_festivos['data']]
+        # TODO: remove non used variables. during code convertion we didnt find the need for this variable
+        #festivos = [str(date) for date in matriz_festivos['data']]
         
         # Process the specific day range
         if isinstance(reshaped_col_index, list) and len(reshaped_col_index) >= 2:
-            col_range = range(reshaped_col_index[0], reshaped_col_index[1] + 1)
+            col_range = [reshaped_col_index[0], reshaped_col_index[1]]
         else:
             col_range = [reshaped_col_index]
+
+        #logger.info(f"DEBUG: col_range: {col_range}")
         
         for k in col_range:
+            
             day_number = pd.to_datetime(day).weekday() + 1  # Convert to 1-7 format
             
             # Find matching cycle row for this day
             cycle_rows = df_cycle90_info_filtered[
-                df_cycle90_info_filtered.apply(lambda row: day in str(row).values, axis=1)
+                df_cycle90_info_filtered['schedule_day'].dt.strftime('%Y-%m-%d') == day
             ]
+
+            #logger.info(f"DEBUG: cycle_rows: {cycle_rows}")
+            #logger.info(f"DEBUG: k: {k}")
             
             if len(cycle_rows) > 0:
                 cycle_row = cycle_rows.iloc[0]
                 val = cycle_row.get('codigo_trads', '-')
                 reshaped_final_3.iloc[reshaped_row_index, k] = val
+
         
         return reshaped_final_3
         
@@ -694,12 +731,33 @@ def count_days_in_week(date_str: str) -> int:
     Returns:
         Number of days (default 7)
     """
-    try:
-        # Simplified implementation - returns 7 days per week
-        return 7
-    except Exception as e:
-        logger.error(f"Error in count_days_in_week: {str(e)}")
-        return 7
+    # Ensure the date is a datetime object
+    if isinstance(date_str, str):
+        date_str = pd.to_datetime(date_str)
+    elif isinstance(date_str, datetime):
+        date_str = pd.to_datetime(date_str)
+    
+    # Convert pandas weekday (0=Monday, 6=Sunday) to R's wday (1=Sunday, 7=Saturday)
+    pandas_weekday = date_str.weekday()
+    r_weekday = 1 if pandas_weekday == 6 else pandas_weekday + 2
+    
+    # If the date is a Sunday (wday=1), move to the previous Monday
+    if r_weekday == 1:
+        start_of_week = date_str - timedelta(days=6)
+    else:
+        # Otherwise, find the Monday of the given week
+        start_of_week = date_str - timedelta(days=r_weekday - 2)
+    
+    # Find the Sunday of the given week
+    end_of_week = start_of_week + timedelta(days=6)
+    
+    # Generate a sequence of dates from Monday to Sunday
+    week_days = pd.date_range(start=start_of_week, end=end_of_week, freq='D')
+    
+    # Count the number of days from the given date onwards
+    num_days = len(week_days[week_days >= date_str])
+    
+    return num_days
 
 def load_wfm_scheds(df_pre_ger: pd.DataFrame, employees_tot_pad: List[str]) -> Tuple[pd.DataFrame, List[str], pd.DataFrame]:
     """

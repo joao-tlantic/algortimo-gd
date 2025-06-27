@@ -58,9 +58,9 @@ CONFIG = {
     },
 
     'external_call_data': {
-        'current_process_id': 249730,
+        'current_process_id': 249468,
         'api_proc_id': 999,
-        'wfm_proc_id': 249730,
+        'wfm_proc_id': 249468,
         'wfm_user': 'WFM',
         'start_date': '2025-01-01',
         'end_date': '2025-12-31',
@@ -73,6 +73,7 @@ CONFIG = {
         'params_algo': os.path.join(ROOT_DIR, 'src', 'sql_querys', ''),
         'params_lq': os.path.join(ROOT_DIR, 'src', 'sql_querys', 'qry_params_LQ.sql'),
         'df_festivos':  os.path.join(ROOT_DIR, 'src', 'sql_querys', 'qry_festivos.sql'),
+        'df_closed_days': os.path.join(ROOT_DIR, 'src', 'sql_querys', 'qry_closed_days.sql'),
     },
 
     'available_entities_aux': {
@@ -84,7 +85,8 @@ CONFIG = {
         'df_faixa_horario': os.path.join(ROOT_DIR, 'src', 'sql_querys', 'queryGetEscFaixaHorario.sql'),
         'df_orcamento': os.path.join(ROOT_DIR, 'src', 'sql_querys', 'queryGetEscOrcamento.sql'),
         'df_calendario_passado': os.path.join(ROOT_DIR, 'src', 'sql_querys', 'queryGetCoreSchedule.sql'),
-        'df_granularidade': os.path.join(ROOT_DIR, 'src', 'sql_querys', 'queryGetEscEstimado.sql')
+        'df_granularidade': os.path.join(ROOT_DIR, 'src', 'sql_querys', 'queryGetEscEstimado.sql'),
+        'df_days_off': os.path.join(ROOT_DIR, 'src', 'sql_querys', 'queryGetDaysOff.sql')
     },
 
     'available_entities_raw': {
