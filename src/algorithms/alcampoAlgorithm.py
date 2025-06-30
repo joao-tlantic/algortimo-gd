@@ -15,7 +15,7 @@ from src.config import PROJECT_NAME
 
 # Import shift scheduler components
 from src.algorithms.shift_scheduler.model.variables import decision_variables
-from src.algorithms.shift_scheduler.model.constraints.alcampo_constraints import (
+from src.algorithms.shift_scheduler.model.alcampo_constraints import (
     shift_day_constraint, week_working_days_constraint, maximum_continuous_working_days,
     maximum_continuous_working_special_days, maximum_free_days, free_days_special_days, 
     tc_atribution, working_days_special_days, LQ_attribution, LD_attribution, 
@@ -25,9 +25,8 @@ from src.algorithms.shift_scheduler.model.constraints.alcampo_constraints import
     limits_LDs_week, one_free_day_weekly, maxi_free_days_c3d, maxi_LQ_days_c3d, 
     assigns_solution_days, day3_quality_weekend
 )
-from src.algorithms.shift_scheduler.model.optimization.optimization_alcampos import optimization_prediction
+from src.algorithms.shift_scheduler.model.optimization_alcampos import optimization_prediction
 from src.algorithms.shift_scheduler.solver.solver import solve
-from src.algorithms.shift_scheduler.solve_alcampo import solve_alcampo
 
 # Set up logger
 logger = get_logger(PROJECT_NAME)
@@ -147,9 +146,8 @@ class AlcampoAlgorithm(BaseAlgorithm):
             self.logger.info("Calling enhanced data processing function")
             
             # Import the enhanced function
-            from src.algorithms.shift_scheduler.data.read_alcampos import read_data_alcampo
+            from src.algorithms.shift_scheduler.model.read_alcampos import read_data_alcampo
             
-            self.logger.info("tou aqui?")
             processed_data = read_data_alcampo(medium_dataframes)
             
             # =================================================================
@@ -215,13 +213,13 @@ class AlcampoAlgorithm(BaseAlgorithm):
                 raise ValueError("No valid days found after processing")
             
             # Log final statistics
-            self.logger.info("✅ Data adaptation completed successfully")
-            self.logger.info(f"📊 Final statistics:")
-            self.logger.info(f"   👥 Valid workers: {len(workers)}")
-            self.logger.info(f"   📅 Total days: {len(days_of_year)}")
-            self.logger.info(f"   🎯 Working days: {len(working_days)}")
-            self.logger.info(f"   ⭐ Special days: {len(special_days)}")
-            self.logger.info(f"   📋 Week mappings: {len(data_dict['week_to_days'])}")
+            self.logger.info("[OK] Data adaptation completed successfully")
+            self.logger.info(f"[STATS] Final statistics:")
+            self.logger.info(f"   Valid workers: {len(workers)}")
+            self.logger.info(f"   Total days: {len(days_of_year)}")
+            self.logger.info(f"   Working days: {len(working_days)}")
+            self.logger.info(f"   Special days: {len(special_days)}")
+            self.logger.info(f"   Week mappings: {len(data_dict['week_to_days'])}")
             
             # Store processed data in instance
             self.data_processed = data_dict
@@ -282,7 +280,6 @@ class AlcampoAlgorithm(BaseAlgorithm):
             
             # Extract algorithm parameters
             shifts = self.parameters["shifts"]
-            print(f"shifts: {shifts}")
             check_shift = self.parameters["check_shifts"]
             check_shift_special = self.parameters["check_shift_special"]
             working_shift = self.parameters["working_shifts"]
@@ -372,11 +369,7 @@ class AlcampoAlgorithm(BaseAlgorithm):
                                  t_lq, matriz_calendario_gd):
         """Apply all Stage 1 constraints to the model."""
         
-        # Constraint for workers having an assigned shift for each day
-        print(f"days_of_year: {days_of_year}")
-        print(f"workers: {workers}")
-        print(f"shifts: {shifts}")
-        
+
         shift_day_constraint(model, shift, days_of_year, workers, shifts)
         
         # Constraint to limit working days in a week based on contract type
@@ -389,22 +382,22 @@ class AlcampoAlgorithm(BaseAlgorithm):
         maximum_continuous_working_special_days(model, shift, special_days, workers, working_shift, contract_type)
         
         # Constraint to limit maximum free days in a year
-        # maximum_free_days(model, shift, days_of_year, workers, total_l, c3d)
+        maximum_free_days(model, shift, days_of_year, workers, total_l, c3d)
         
         # # Constraint for free days on special days
-        # free_days_special_days(model, shift, special_days, workers, working_days, total_l_dom)
+        free_days_special_days(model, shift, special_days, workers, working_days, total_l_dom)
         
-        # # TC attribution constraint
+        # TC attribution constraint
         # tc_atribution(model, shift, workers, days_of_year, tc, special_days, working_days)
         
         # # Working days special days constraint
         # working_days_special_days(model, shift, special_days, workers, working_days, l_d, contract_type)
         
         # # LQ attribution constraint
-        # LQ_attribution(model, shift, workers, working_days, l_q, c2d)
+        LQ_attribution(model, shift, workers, working_days, l_q, c2d)
         
         # # LD attribution constraint
-        # LD_attribution(model, shift, workers, working_days, l_d)
+        LD_attribution(model, shift, workers, working_days, l_d)
         
         # Closed holiday attribution
         closed_holiday_attribution(model, shift, workers, closed_holidays)
@@ -466,8 +459,8 @@ class AlcampoAlgorithm(BaseAlgorithm):
                              working_days, start_weekday, shifts)
         
         # Constraint for 3-day quality weekends
-        day3_quality_weekend(new_model, new_shift, workers, working_days, start_weekday, 
-                            schedule_df, c3d, contract_type, closed_holidays)
+        # day3_quality_weekend(new_model, new_shift, workers, working_days, start_weekday, 
+        #                     schedule_df, c3d, contract_type, closed_holidays)
 
     def format_results(self, algorithm_results: pd.DataFrame = None) -> Dict[str, Any]:
         """
