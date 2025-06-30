@@ -80,7 +80,7 @@ def solve(
         if max_time_seconds <= 0:
             raise ValueError("max_time_seconds must be positive")
         
-        logger.info(f"✅ Input validation passed:")
+        logger.info(f"[OK] Input validation passed:")
         logger.info(f"  - Days to schedule: {len(days_of_year)} days (from {min(days_of_year)} to {max(days_of_year)})")
         logger.info(f"  - Workers: {len(workers)} workers")
         logger.info(f"  - Special days: {len(special_days)} days")
@@ -148,7 +148,7 @@ def solve(
             
             raise RuntimeError(error_msg)
         
-        logger.info(f"✅ Solution found! Status: {solver.status_name(status)}")
+        logger.info(f"[OK] Solution found! Status: {solver.status_name(status)}")
         
         # =================================================================
         # 5. PROCESS SOLUTION AND CREATE SCHEDULE
@@ -262,7 +262,7 @@ def solve(
                 table_data.append(worker_row)
                 worker_stats[w] = {'L': 0, 'LQ': 0, 'LD': 0, 'TC': 0, 'Special_MT': 0, 'Unassigned': len(days_of_year)}
 
-        logger.info(f"✅ Successfully processed {processed_workers}/{len(workers)} workers")
+        logger.info(f"[OK] Successfully processed {processed_workers}/{len(workers)} workers")
 
         # =================================================================
         # 6. CREATE AND VALIDATE DATAFRAME
@@ -314,7 +314,7 @@ def solve(
         try:
             # Export the DataFrame to an Excel file
             schedule_df.to_excel(output_filename, index=False)
-            logger.info(f"✅ Initial Excel file created: {output_filename}")
+            logger.info(f"[OK] Initial Excel file created: {output_filename}")
 
             # Add formatting and summary sheet
             wb = load_workbook(output_filename)
@@ -339,7 +339,7 @@ def solve(
                     logger.warning(f"Could not parse day number from column: {column_name}, error: {e}")
                     continue
 
-            logger.info(f"✅ Highlighted {special_days_highlighted} special days in Excel")
+            logger.info(f"[OK] Highlighted {special_days_highlighted} special days in Excel")
 
             # Save the changes
             wb.save(output_filename)
@@ -361,9 +361,9 @@ def solve(
                     for w, stats in worker_stats.items()
                 ])
                 counts_df.to_excel(writer, sheet_name='Shift Summary', index=False)
-                logger.info("✅ Summary sheet added to Excel file")
+                logger.info("[OK] Summary sheet added to Excel file")
 
-            logger.info(f"✅ Schedule successfully exported to '{output_filename}' with summary sheet")
+            logger.info(f"[OK] Schedule successfully exported to '{output_filename}' with summary sheet")
 
         except Exception as e:
             logger.error(f"Error exporting to Excel: {e}")
@@ -388,7 +388,7 @@ def solve(
         if len(schedule_df.columns) != expected_cols:
             logger.warning(f"DataFrame column count mismatch: expected {expected_cols}, got {len(schedule_df.columns)}")
 
-        logger.info("✅ Enhanced solver completed successfully")
+        logger.info("[OK] Enhanced solver completed successfully")
         return schedule_df
         
     except Exception as e:
