@@ -291,7 +291,7 @@ class AlgoritmoGDService(BaseService):
 
             posto_id_list = self.data.auxiliary_data.get('posto_id_list', [])
             for posto_id in posto_id_list:
-                if posto_id != 153: continue # TODO: remove this, just for testing purposes
+                if posto_id != 158: continue # TODO: remove this, just for testing purposes
                 progress = 0.0
                 if self.stage_handler:
                     self.stage_handler.start_substage('processing', 'connection')
@@ -772,7 +772,6 @@ class AlgoritmoGDService(BaseService):
                 start_date=start_date,
                 end_date=end_date,
                 fer=self.data.auxiliary_data.get('df_festivos'),
-                closed_days=self.data.auxiliary_data.get('df_closed_days')
             )
             if not success:
                 self.logger.warning("Performing func_inicializa unsuccessful, returning False")
